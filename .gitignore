@@ -1,0 +1,19 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+# Java / Node
+target/
+build/
+node_modules/
+dist/
+.next/
+# Secrets & OS
+.env*
+*.json.key
+.DS_Store
+.idea/
+.vscode/
