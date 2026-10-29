@@ -1,131 +1,131 @@
 # Puente
 
-**API-first cross-border remittances & payments platform on Google Cloud.**
+**Plataforma API-first de remesas y pagos transfronterizos en Google Cloud.**
 
-Puente lets fintechs and remittance companies send money from the US to Central America (SV, GT, HN) through a single API: real-time FX quotes, sanctions screening, a double-entry ledger, payouts to banks and wallets, and signed webhooks — built to never lose or duplicate a cent.
+Puente permite a fintechs y empresas de remesas enviar dinero de EE. UU. a Centroamérica (SV, GT, HN) mediante una sola API: cotizaciones de tipo de cambio en tiempo real, verificación contra listas de sanciones, un ledger de partida doble, pagos a bancos y billeteras, y webhooks firmados. Está diseñada para nunca perder ni duplicar un centavo.
 
-> 🚧 **Status:** Phase 0 — foundations & walking skeleton. This README describes the target platform; the [roadmap](#roadmap) shows what is already built.
+> 🚧 **Estado:** Fase 0 — fundamentos y walking skeleton. Este README describe la plataforma objetivo; la [hoja de ruta](#hoja-de-ruta) muestra lo que ya está construido.
 
 ---
 
-## Why this project
+## Por qué este proyecto
 
-Remittances are a core part of Central American economies, yet integrating with payout networks is slow, fragile and hard to audit. Puente is a reference implementation of how a modern, cloud-native payments platform should be **designed, secured, operated and recovered** — not just coded.
+Las remesas son una parte central de las economías centroamericanas, pero integrarse con redes de pago es lento, frágil y difícil de auditar. Puente es una implementación de referencia de cómo una plataforma de pagos moderna y cloud-native debe **diseñarse, asegurarse, operarse y recuperarse**, no solo programarse.
 
-## Key capabilities
+## Capacidades principales
 
-| Capability | How |
+| Capacidad | Cómo |
 |---|---|
-| **Exactly-once money movement** | `Idempotency-Key` on every write; retries never duplicate a transfer |
-| **Double-entry ledger** | Immutable, balanced debit/credit entries; RPO 0 target |
-| **Compliance screening** | Sanctions lists (OFAC SDN), per-customer limits, velocity rules, manual review queue |
-| **Resilient payouts** | Adapters to simulated banks/wallets that fail on purpose; circuit breakers, retries, DLQ |
-| **Partner webhooks** | HMAC-signed, at-least-once delivery with exponential backoff |
-| **API management** | Apigee: OAuth2 client credentials, API products, quotas, spike arrest, versioning |
-| **Partner portal** | Next.js + TypeScript portal and compliance back-office with OIDC auth |
+| **Movimiento de dinero exactly-once** | `Idempotency-Key` en cada escritura; los reintentos nunca duplican una transferencia |
+| **Ledger de partida doble** | Asientos de débito/crédito inmutables y balanceados; objetivo de RPO 0 |
+| **Verificación de cumplimiento** | Listas de sanciones (OFAC SDN), límites por cliente, reglas de velocidad, cola de revisión manual |
+| **Pagos resilientes** | Adaptadores a bancos y billeteras simulados que fallan a propósito; circuit breakers, reintentos, DLQ |
+| **Webhooks para partners** | Firmados con HMAC, entrega at-least-once con backoff exponencial |
+| **Gestión de APIs** | Apigee: OAuth2 client credentials, API products, cuotas, spike arrest, versionado |
+| **Portal de partners** | Portal y back-office de cumplimiento en Next.js + TypeScript con autenticación OIDC |
 
-## Target architecture
+## Arquitectura objetivo
 
 ```mermaid
 flowchart LR
-  P["Partner fintech"] -->|"OAuth2 / HTTPS"| A["Apigee"]
-  UI["Partner portal - Next.js"] --> A
+  P["Fintech partner"] -->|"OAuth2 / HTTPS"| A["Apigee"]
+  UI["Portal de partners - Next.js"] --> A
   A --> T["transfer-service"]
   T --> Q["quote-service"]
   T --> C["compliance-service"]
   T --> L["ledger-service"]
   L --> DB[("PostgreSQL")]
-  T -->|"events"| PS["Pub/Sub"]
+  T -->|"eventos"| PS["Pub/Sub"]
   PS --> PO["payout-service"]
   PS --> W["webhook-service"]
-  W -->|"HMAC signed"| P
+  W -->|"firmado con HMAC"| P
   PS --> BQ[("BigQuery analytics")]
 ```
 
-## Services
+## Servicios
 
-| Service | Responsibility | Key pattern |
+| Servicio | Responsabilidad | Patrón clave |
 |---|---|---|
-| `quote-service` | FX quotes with TTL | Caching, expiry |
-| `transfer-service` | Transfer lifecycle | Orchestrated saga, state machine |
-| `compliance-service` | Sanctions, limits, velocity | Rules engine, audit trail |
-| `ledger-service` | Double-entry bookkeeping | Strong consistency, transactional outbox |
-| `payout-service` | Bank / wallet adapters | Idempotency, circuit breaker |
-| `webhook-service` | Partner notifications | At-least-once, DLQ, backoff |
-| `partner-portal` | Portal & back-office | OIDC, CDN delivery |
+| `quote-service` | Cotizaciones de tipo de cambio con TTL | Caché, expiración |
+| `transfer-service` | Ciclo de vida de la transferencia | Saga orquestada, máquina de estados |
+| `compliance-service` | Sanciones, límites, velocidad | Motor de reglas, registro de auditoría |
+| `ledger-service` | Contabilidad de partida doble | Consistencia fuerte, transactional outbox |
+| `payout-service` | Adaptadores de bancos y billeteras | Idempotencia, circuit breaker |
+| `webhook-service` | Notificaciones a partners | At-least-once, DLQ, backoff |
+| `partner-portal` | Portal y back-office | OIDC, entrega por CDN |
 
-## Roadmap
+## Hoja de ruta
 
-| Version | Scope | Platform | Status |
+| Versión | Alcance | Plataforma | Estado |
 |---|---|---|---|
-| **v0** | Walking skeleton: quote + transfer services, IaC, keyless CI/CD, cost guardrails | Cloud Run | 🟡 In progress |
-| **v1** | All services, Apigee, Identity Platform, partner portal | Cloud Run | ⚪ Planned |
-| **v2** | Private networking, managed PostgreSQL, Pub/Sub, Secret Manager, Cloud Armor | Cloud Run + VPC | ⚪ Planned |
-| **v3** | Kubernetes, GitOps, progressive delivery | GKE + Argo CD | ⚪ Planned |
-| **v4** | Multi-region, tested DR, SLOs & error budgets, FinOps, hardened security | GKE multi-region | ⚪ Planned |
+| **v0** | Walking skeleton: servicios de quote y transfer, IaC, CI/CD sin llaves, controles de costo | Cloud Run | 🟡 En progreso |
+| **v1** | Todos los servicios, Apigee, Identity Platform, portal de partners | Cloud Run | ⚪ Planeado |
+| **v2** | Red privada, PostgreSQL administrado, Pub/Sub, Secret Manager, Cloud Armor | Cloud Run + VPC | ⚪ Planeado |
+| **v3** | Kubernetes, GitOps, despliegue progresivo | GKE + Argo CD | ⚪ Planeado |
+| **v4** | Multi-región, DR probado, SLOs y error budgets, FinOps, seguridad reforzada | GKE multi-región | ⚪ Planeado |
 
-## Non-functional targets (v4)
+## Objetivos no funcionales (v4)
 
-| Attribute | Target |
+| Atributo | Objetivo |
 |---|---|
-| Availability (`POST /transfers`) | 99.9% |
-| Latency p95 (sync path) | < 300 ms |
-| Ledger RPO / RTO | 0 / < 1 h |
-| Duplicate transfers under retries | 0 (proven with load + chaos tests) |
-| Idle cost | $0 (everything destroyable or in free tier) |
+| Disponibilidad (`POST /transfers`) | 99.9% |
+| Latencia p95 (ruta síncrona) | < 300 ms |
+| RPO / RTO del ledger | 0 / < 1 h |
+| Transferencias duplicadas con reintentos | 0 (comprobado con pruebas de carga y caos) |
+| Costo en reposo | $0 (todo se puede destruir o está en la capa gratuita) |
 
-## Engineering principles
+## Principios de ingeniería
 
-- **Everything as code** — Terraform for all infrastructure; no click-ops.
-- **Zero long-lived keys** — GitHub Actions authenticates via Workload Identity Federation (OIDC).
-- **Secure by default** — least privilege, secrets in Secret Manager, encryption in transit and at rest, signed images and SBOMs.
-- **Cost guardrails first** — budgets and alerts exist before any resource; every lab ends with `destroy`.
-- **Decisions are documented** — every significant choice is recorded as an [ADR](docs/adr).
+- **Todo como código**: Terraform para toda la infraestructura; nada de click-ops.
+- **Cero llaves de larga duración**: GitHub Actions se autentica con Workload Identity Federation (OIDC).
+- **Seguro por defecto**: mínimo privilegio, secretos en Secret Manager, cifrado en tránsito y en reposo, imágenes firmadas y SBOMs.
+- **Controles de costo primero**: los presupuestos y alertas existen antes que cualquier recurso; cada laboratorio termina con `destroy`.
+- **Las decisiones se documentan**: cada decisión importante queda registrada como un [ADR](docs/adr).
 
-## Tech stack
+## Stack tecnológico
 
-| Layer | Technology |
+| Capa | Tecnología |
 |---|---|
 | Backend | Java 21, Spring Boot, Maven |
 | Frontend | Next.js, TypeScript |
-| API management | Apigee |
-| Compute | Cloud Run → GKE |
-| Data & messaging | PostgreSQL, Firestore, Pub/Sub, BigQuery |
+| Gestión de APIs | Apigee |
+| Cómputo | Cloud Run → GKE |
+| Datos y mensajería | PostgreSQL, Firestore, Pub/Sub, BigQuery |
 | IaC | Terraform |
 | CI/CD | GitHub Actions + Workload Identity Federation |
-| Supply chain | Trivy, Syft (SBOM), cosign |
-| Observability | OpenTelemetry, Cloud Monitoring, Cloud Trace |
-| Testing | JUnit, k6 load tests |
+| Cadena de suministro | Trivy, Syft (SBOM), cosign |
+| Observabilidad | OpenTelemetry, Cloud Monitoring, Cloud Trace |
+| Pruebas | JUnit, pruebas de carga con k6 |
 
-## Repository layout
+## Estructura del repositorio
 
 ```
 puente/
-├── apigee/            # API proxies & shared flows
+├── apigee/            # Proxies de API y shared flows
 ├── docs/
 │   ├── adr/           # Architecture Decision Records
-│   └── labs/          # Hands-on lab journal: what broke and how it was fixed
-├── frontend/          # Partner portal (Next.js)
+│   └── labs/          # Bitácora de laboratorios: qué se rompió y cómo se arregló
+├── frontend/          # Portal de partners (Next.js)
 ├── infra/terraform/
-│   ├── bootstrap/     # Remote state, Workload Identity Federation
-│   ├── modules/       # Reusable modules
-│   └── envs/dev/      # Environment composition
-├── scripts/           # Automation (lab teardown, helpers)
-├── services/          # Spring Boot microservices
-└── .github/workflows/ # CI/CD pipelines
+│   ├── bootstrap/     # Estado remoto, Workload Identity Federation
+│   ├── modules/       # Módulos reutilizables
+│   └── envs/dev/      # Composición del entorno
+├── scripts/           # Automatización (limpieza de laboratorios, utilidades)
+├── services/          # Microservicios Spring Boot
+└── .github/workflows/ # Pipelines de CI/CD
 ```
 
-## Architecture decisions
+## Decisiones de arquitectura
 
-| ADR | Decision |
+| ADR | Decisión |
 |---|---|
 | [0001](docs/adr/0001-monorepo.md) | Monorepo |
 
-## Disclaimer
+## Aviso
 
-Puente is a portfolio and learning project. It is not affiliated with any financial institution, moves no real money, and all payout partners are simulated.
+Puente es un proyecto de portafolio y aprendizaje. No está afiliado a ninguna institución financiera, no mueve dinero real y todos los partners de pago son simulados.
 
-## Author
+## Autor
 
-**Manuel Cardoza** — Backend engineer moving into cloud & platform engineering.
+**Manuel Cardoza**: backend engineer en transición a cloud y platform engineering.
 [GitHub](https://github.com/JCardzZ)
